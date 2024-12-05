@@ -2,6 +2,7 @@ import { useState } from "react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { PatientForm, PatientData } from "@/components/PatientForm";
 import { BodyMap } from "@/components/BodyMap";
+import { SymptomPanel } from "@/components/SymptomPanel";
 import { ChatInterface } from "@/components/ChatInterface";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -11,6 +12,7 @@ const Index = () => {
   const [language, setLanguage] = useState("en");
   const [patientData, setPatientData] = useState<PatientData | null>(null);
   const [selectedBodyPart, setSelectedBodyPart] = useState<string | null>(null);
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [messages, setMessages] = useState<Array<{ role: "user" | "assistant", content: string }>>([]);
   const { toast } = useToast();
 
@@ -26,19 +28,42 @@ const Index = () => {
   const handleBodyPartSelect = (part: string) => {
     setSelectedBodyPart(part);
     setStep(3);
-    setMessages([
-      {
-        role: "assistant",
-        content: `Please describe the symptoms you're experiencing in your ${part}.`
+  };
+
+  const handleSymptomSelect = (symptom: string) => {
+    setSelectedSymptoms(prev => {
+      if (prev.includes(symptom)) {
+        return prev.filter(s => s !== symptom);
       }
-    ]);
+      return [...prev, symptom];
+    });
+  };
+
+  const handleStartChat = () => {
+    if (selectedSymptoms.length === 0) {
+      toast({
+        title: "No Symptoms Selected",
+        description: "Please select at least one symptom to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setStep(4);
+    const initialMessage = {
+      role: "assistant" as const,
+      content: `I understand you're experiencing the following symptoms: ${selectedSymptoms.join(", ")}. How long have you been experiencing these symptoms?`
+    };
+    setMessages([initialMessage]);
   };
 
   const handleSendMessage = (message: string) => {
-    setMessages(prev => [...prev, 
-      { role: "user", content: message },
-      { role: "assistant", content: "I understand you're experiencing symptoms in your " + selectedBodyPart + ". Can you tell me when these symptoms started?" }
-    ]);
+    const newUserMessage = { role: "user" as const, content: message };
+    const newAIMessage = {
+      role: "assistant" as const,
+      content: `I see. Given your symptoms in the ${selectedBodyPart} area, can you tell me if you've experienced any other related symptoms?`
+    };
+    setMessages(prev => [...prev, newUserMessage, newAIMessage]);
   };
 
   return (
@@ -80,9 +105,27 @@ const Index = () => {
           )}
 
           {step === 3 && (
+            <div className="fade-in space-y-4">
+              <h2 className="text-2xl font-semibold text-center mb-6">
+                Select Your Symptoms
+              </h2>
+              <SymptomPanel
+                part={selectedBodyPart}
+                onSymptomSelect={handleSymptomSelect}
+                selectedSymptoms={selectedSymptoms}
+              />
+              <div className="flex justify-center">
+                <Button onClick={handleStartChat} className="mt-4">
+                  Continue to Chat
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
             <div className="fade-in">
               <h2 className="text-2xl font-semibold text-center mb-6">
-                Describe Your Symptoms
+                Chat with JAIP AI
               </h2>
               <ChatInterface
                 messages={messages}
