@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { getAIResponse } from "@/services/openai";
 
 const Index = () => {
   const [step, setStep] = useState(1);
@@ -17,6 +18,7 @@ const Index = () => {
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [messages, setMessages] = useState<Array<{ role: "user" | "assistant", content: string }>>([]);
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handlePatientSubmit = (data: PatientData) => {
     setPatientData(data);
@@ -59,13 +61,33 @@ const Index = () => {
     setMessages([initialMessage]);
   };
 
-  const handleSendMessage = (message: string) => {
-    const newUserMessage = { role: "user" as const, content: message };
-    const newAIMessage = {
-      role: "assistant" as const,
-      content: `I see. Given your symptoms in the ${selectedBodyPart} area, can you tell me if you've experienced any other related symptoms?`
-    };
-    setMessages(prev => [...prev, newUserMessage, newAIMessage]);
+  const handleSendMessage = async (message: string, image?: string) => {
+    try {
+      setIsLoading(true);
+      const newUserMessage = { 
+        role: "user" as const, 
+        content: message,
+        image 
+      };
+      
+      setMessages(prev => [...prev, newUserMessage]);
+
+      const aiResponse = await getAIResponse([
+        ...messages.map(msg => ({ role: msg.role, content: msg.content })),
+        { role: "user", content: message }
+      ]);
+
+      const newAIMessage = {
+        role: "assistant" as const,
+        content: aiResponse
+      };
+
+      setMessages(prev => [...prev, newAIMessage]);
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const steps = [
@@ -202,6 +224,7 @@ const Index = () => {
                 <ChatInterface
                   messages={messages}
                   onSendMessage={handleSendMessage}
+                  isLoading={isLoading}
                 />
               </div>
             )}
@@ -220,3 +243,4 @@ const Index = () => {
 };
 
 export default Index;
+
