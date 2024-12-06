@@ -1,14 +1,18 @@
 import { toast } from "@/components/ui/use-toast";
 
+// Use import.meta.env to access Vite environment variables
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 const API_URL = "https://api.openai.com/v1/chat/completions";
 
 export async function getAIResponse(messages: Array<{ role: string; content: string }>) {
   try {
+    console.log("Checking API key configuration...");
     if (!OPENAI_API_KEY) {
-      throw new Error("OpenAI API key is not configured");
+      console.error("OpenAI API key not found in environment variables");
+      throw new Error("OpenAI API key is not configured. Please add VITE_OPENAI_API_KEY to your environment variables.");
     }
 
+    console.log("Making API request to OpenAI...");
     const response = await fetch(API_URL, {
       method: "POST",
       headers: {
@@ -29,17 +33,21 @@ export async function getAIResponse(messages: Array<{ role: string; content: str
       }),
     });
 
+    console.log("Response status:", response.status);
     if (!response.ok) {
-      throw new Error("Failed to get AI response");
+      const errorData = await response.json();
+      console.error("OpenAI API Error:", errorData);
+      throw new Error(`Failed to get AI response: ${errorData.error?.message || 'Unknown error'}`);
     }
 
     const data = await response.json();
+    console.log("Successfully received AI response");
     return data.choices[0].message.content;
   } catch (error) {
     console.error("OpenAI API Error:", error);
     toast({
       title: "Error",
-      description: "Failed to get AI response. Please try again.",
+      description: error instanceof Error ? error.message : "Failed to get AI response. Please try again.",
       variant: "destructive",
     });
     throw error;
