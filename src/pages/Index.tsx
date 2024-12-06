@@ -34,6 +34,11 @@ const Index = () => {
     setStep(3);
   };
 
+  const handleCloseSymptomPanel = () => {
+    setSelectedBodyPart(null);
+    setStep(2);
+  };
+
   const handleSymptomSelect = (symptom: string) => {
     setSelectedSymptoms(prev => {
       if (prev.includes(symptom)) {
@@ -203,6 +208,7 @@ const Index = () => {
                   part={selectedBodyPart}
                   onSymptomSelect={handleSymptomSelect}
                   selectedSymptoms={selectedSymptoms}
+                  onClose={handleCloseSymptomPanel}
                 />
                 <div className="flex justify-center">
                   <Button 
@@ -231,10 +237,11 @@ const Index = () => {
           </motion.div>
         </main>
 
-        <footer className="text-center text-sm text-muted-foreground">
-          <p>
-            This is not a substitute for professional medical advice. 
-            If you're experiencing a medical emergency, please contact emergency services immediately.
+        <footer className="text-center text-sm text-muted-foreground max-w-2xl mx-auto">
+          <p className="leading-relaxed">
+            JAIP AI was developed to help you understand your symptoms better and only for health purposes. 
+            While we strive to provide accurate information, this tool does not replace professional medical care. 
+            Always consult with qualified healthcare providers for proper diagnosis and treatment.
           </p>
         </footer>
       </div>
@@ -243,4 +250,3 @@ const Index = () => {
 };
 
 export default Index;
-
