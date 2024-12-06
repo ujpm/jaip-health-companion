@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { ImageUpload } from "./ImageUpload";
-import { Loader2 } from "lucide-react";
+import { Loader2, RotateCcw } from "lucide-react";
 import { useToast } from "./ui/use-toast";
 
 interface Message {
@@ -16,9 +16,15 @@ interface ChatInterfaceProps {
   onSendMessage: (message: string, image?: string) => void;
   messages: Message[];
   isLoading?: boolean;
+  onRestart?: () => void;
 }
 
-export const ChatInterface = ({ onSendMessage, messages, isLoading }: ChatInterfaceProps) => {
+export const ChatInterface = ({ 
+  onSendMessage, 
+  messages, 
+  isLoading,
+  onRestart 
+}: ChatInterfaceProps) => {
   const [input, setInput] = useState("");
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const { toast } = useToast();
@@ -38,8 +44,29 @@ export const ChatInterface = ({ onSendMessage, messages, isLoading }: ChatInterf
     setUploadedImage(null);
   };
 
+  const handleRestart = () => {
+    if (onRestart) {
+      onRestart();
+      setInput("");
+      setUploadedImage(null);
+    }
+  };
+
   return (
     <div className="flex flex-col h-[600px] max-w-2xl mx-auto border rounded-lg bg-background">
+      <div className="flex justify-between items-center p-4 border-b">
+        <h3 className="font-semibold">Chat with JAIP AI</h3>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRestart}
+          className="flex items-center gap-2"
+        >
+          <RotateCcw className="w-4 h-4" />
+          Restart
+        </Button>
+      </div>
+
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
         {messages.map((message, index) => (
           <div

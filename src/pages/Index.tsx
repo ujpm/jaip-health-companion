@@ -95,6 +95,18 @@ const Index = () => {
     }
   };
 
+  const handleRestart = () => {
+    setStep(1);
+    setPatientData(null);
+    setSelectedBodyPart(null);
+    setSelectedSymptoms([]);
+    setMessages([]);
+    toast({
+      title: "Session Restarted",
+      description: "You can start a new consultation.",
+    });
+  };
+
   const steps = [
     { number: 1, title: "Patient Information" },
     { number: 2, title: "Select Body Part" },
@@ -231,6 +243,7 @@ const Index = () => {
                   messages={messages}
                   onSendMessage={handleSendMessage}
                   isLoading={isLoading}
+                  onRestart={handleRestart}
                 />
               </div>
             )}
